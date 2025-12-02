@@ -28,19 +28,19 @@ $currentAct = $currentAct ?? '';
         <span>Booking</span>
     </a>
 
-    <a href="?act=staffs" 
+    <a href="?act=admin-staffs" 
        class="menu-item <?= (in_array($currentAct, ['admin-staff', 'admin-staff-create', 'admin-staff-edit']) ? 'active' : '') ?>">
         <span class="menu-icon icon-guide"></span>
-        <span>Hướng dẫn viên</span>
+        <span>Nhân viên</span>
     </a>
 
-    <a href="?act=schedules" 
-       class="menu-item <?= ($currentAct == 'schedules' ? 'active' : '') ?>">
+    <a href="?act=admin-schedule" 
+       class="menu-item <?= ($currentAct == 'schedule' ? 'active' : '') ?>">
         <span class="menu-icon icon-schedule"></span>
         <span>Lịch điều hành</span>
     </a>
 
-    <a href="?act=reports" 
+    <a href="?act=admin-reports" 
        class="menu-item <?= ($currentAct == 'reports' ? 'active' : '') ?>">
         <span class="menu-icon icon-report"></span>
         <span>Báo cáo</span>

@@ -18,6 +18,7 @@ require_once './controllers/DashboardController.php';
 require_once './controllers/TourController.php';
 require_once './controllers/BookingController.php';
 require_once './controllers/CategoryController.php';
+require_once './controllers/ScheduleController.php';
 
 
 // Auth
@@ -55,6 +56,14 @@ match ($act) {
     'admin-category-edit'    => (new CategoryController())->edit($currentAct),
     'admin-category-update'    => (new CategoryController())->update(),
     'admin-category-delete'    => (new CategoryController())->delete(),
+
+// ================= CATEGORY ADMIN ===================
+    'admin-schedule'    => (new ScheduleController())->index($currentAct),
+    'admin-schedule-create'    => (new ScheduleController())->create($currentAct),
+    'admin-schedule-store'    => (new ScheduleController())->store(),
+    'admin-schedule-edit'    => (new ScheduleController())->edit($currentAct),
+    'admin-schedule-update'    => (new ScheduleController())->update(),
+    'admin-schedule-delete'    => (new ScheduleController())->delete(),
 
 
 
