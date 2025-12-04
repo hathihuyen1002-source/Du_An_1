@@ -6,138 +6,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách Tour</title>
 
-    <!-- BOOTSTRAP -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .table-img {
+            width: 80px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            transition: transform 0.2s;
+        }
+
+        .table-img:hover {
+            transform: scale(1.1);
+        }
+
+        .card {
+            border-radius: 12px;
+        }
+
+        .page-title {
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .btn-sm {
+            min-width: 60px;
+        }
+
+        .table thead th {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .table tbody td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .search-form .form-control {
+            min-width: 250px;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
 
-    <div class="container mt-4">
+    <div class="container mt-5">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h1 class="page-title">Danh sách Tour</h1>
-
+            <h1 class="page-title">📋 Danh sách Tour</h1>
             <a href="index.php?act=admin-tour-create" class="btn btn-primary">
-                + Thêm Tour
+                <i class="bi bi-plus-circle"></i> Thêm Tour
             </a>
         </div>
-        <div class="d-flex justify-content-between align-items-center mb-3">
 
-            <form action="index.php" method="GET" class="form-inline">
-                <input type="hidden" name="act" value="admin-tour">
-
-                <input type="text" name="keyword" class="form-control mr-2" placeholder="Tìm theo tên, mã tour..."
+        <!-- Form tìm kiếm -->
+        <form class="row g-2 mb-4 search-form" method="get" action="index.php">
+            <input type="hidden" name="act" value="admin-tour">
+            <div class="col-auto">
+                <input type="text" name="keyword" class="form-control" placeholder="Tìm theo tên, mã tour..."
                     value="<?= isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '' ?>">
-
-                <button class="btn btn-primary mr-2">Tìm kiếm</button>
-
-                <?php if (!empty($_GET['keyword'])): ?>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary">Tìm kiếm</button>
+            </div>
+            <?php if (!empty($_GET['keyword'])): ?>
+                <div class="col-auto">
                     <a href="index.php?act=admin-tour" class="btn btn-secondary">Xóa</a>
-                <?php endif; ?>
-            </form>
+                </div>
+            <?php endif; ?>
+        </form>
 
-        </div>
-
-
-        <!-- Nếu $tours chưa có -> gán mảng rỗng để tránh lỗi -->
-        <?php if (!isset($tours) || !is_array($tours))
-            $tours = []; ?>
-
+        <!-- Bảng tour -->
         <div class="card shadow-sm">
             <div class="card-body p-0">
-
-                <table class="table table-striped table-bordered mb-0">
-                    <thead class="thead-dark">
+                <table class="table table-hover table-bordered align-middle mb-0">
+                    <thead class="table-dark">
                         <tr>
-                            <th width="5%">ID</th>
-                            <th width="10%">Mã</th>
-                            <th width="25%">Tiêu đề</th>
-                            <th width="10%">Giá</th>
-                            <th width="10%">Ngày</th>
-                            <th width="15%">Ảnh</th>
-                            <th width="10%">Trạng thái</th>
-                            <th width="15%">Hành động</th>
+                            <th>STT</th>
+                            <th>Mã Tour</th>
+                            <th>Tiêu đề</th>
+                            <th>Danh mục</th> <!-- Thêm -->
+                            <th>Giá người lớn</th>
+                            <th>Giá trẻ em</th>
+                            <th>Ngày</th>
+                            <th>Ảnh</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
-
                     <tbody>
-                        <?php if (count($tours) == 0): ?>
+                        <?php foreach ($tours as $key => $t): ?>
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">
-                                    <i>Chưa có tour nào</i>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-
-                        <?php foreach ($tours as $t): ?>
-                            <tr>
-                                <td><?= $t["id"] ?></td>
+                                <td><?= $key + 1 ?></td>
                                 <td><?= $t["code"] ?></td>
-                                <td><?= $t["title"] ?></td>
-                                <td><?= number_format($t["base_price"]) ?>đ</td>
+                                <td class="text-start"><?= $t["title"] ?></td>
+                                <td>
+                                    <?= $t["category_name"] ?? 'Chưa có' ?> <!-- Hiển thị tên danh mục -->
+                                </td>
+                                <td><?= number_format($t["adult_price"]) ?> đ</td>
+                                <td><?= number_format($t["child_price"]) ?> đ</td>
                                 <td><?= $t["duration_days"] ?> ngày</td>
-
                                 <td>
                                     <?php
-                                    // đảm bảo $t['image_url'] tồn tại
                                     $image = trim($t['image_url'] ?? '');
-
-                                    // nếu rỗng -> hiển thị text
                                     if ($image === '') {
                                         echo '<span class="text-muted">Không có ảnh</span>';
                                     } else {
-                                        // Nếu người dùng đã lưu toàn bộ đường dẫn (ví dụ "assets/images/halong.jpg" hoặc "/assets/..")
                                         if (preg_match('#^(https?:)?//#i', $image) || str_starts_with($image, '/') || str_contains($image, 'assets/')) {
                                             $src = $image;
                                         } else {
-                                            // nếu chỉ lưu filename, nối vào folder assets/images
                                             $src = 'assets/images/' . $image;
                                         }
-
-                                        // kiểm tra file thực tế tồn tại trên server (tùy chọn)
-                                        $serverPath = __DIR__ . '/../../../' . ltrim($src, '/'); // điều chỉnh nếu cấu trúc folder khác
+                                        $serverPath = __DIR__ . '/../../../' . ltrim($src, '/');
                                         if (file_exists($serverPath)) {
-                                            // escape URL an toàn
-                                            echo '<img src="' . htmlspecialchars($src) . '" width="90" class="rounded" alt="">';
+                                            echo '<img src="' . htmlspecialchars($src) . '" class="table-img" alt="">';
                                         } else {
-                                            // nếu file server không có, vẫn in link (trong dev check) hoặc hiển thị placeholder
-                                            // echo '<img src="'.htmlspecialchars($src).'" width="90" class="rounded" alt="">';
                                             echo '<span class="text-muted">Ảnh không tìm thấy</span>';
                                         }
                                     }
                                     ?>
                                 </td>
-
-
                                 <td>
-                                    <span class="badge badge-<?= $t["is_active"] ? 'success' : 'secondary' ?>">
+                                    <span class="badge <?= $t["is_active"] ? 'bg-success' : 'bg-secondary' ?>">
                                         <?= $t["is_active"] ? "Hiển thị" : "Ẩn" ?>
                                     </span>
                                 </td>
-
                                 <td>
                                     <a href="index.php?act=admin-tour-edit&id=<?= $t['id'] ?>"
-                                        class="btn btn-sm btn-warning">
-                                        Sửa
-                                    </a>
-
+                                        class="btn btn-sm btn-warning me-1">Sửa</a>
                                     <a href="index.php?act=admin-tour-delete&id=<?= $t['id'] ?>"
                                         onclick="return confirm('Bạn có chắc muốn xóa tour này?')"
-                                        class="btn btn-sm btn-danger">
-                                        Xóa
-                                    </a>
+                                        class="btn btn-sm btn-danger">Xóa</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
 
                 </table>
-
             </div>
         </div>
 
     </div>
 
+    <!-- Bootstrap JS + Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </body>
 
 </html>

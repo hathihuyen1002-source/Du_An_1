@@ -11,11 +11,17 @@ class TourModel
 
     public function getAll()
     {
-        $sql = "SELECT * FROM tours ORDER BY created_at DESC";
+        $sql = "SELECT t.*, c.name AS category_name
+            FROM tours t
+            LEFT JOIN tour_category c ON t.category_id = c.id
+            ORDER BY t.code ASC";
+
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
 
     public function searchByKeyword($keyword)
     {
@@ -35,9 +41,9 @@ class TourModel
 
     public function store($data)
     {
-        $sql = "INSERT INTO tours(code, title, short_desc, full_desc, base_price, duration_days, 
-                category_id, policy, supplier, image_url, is_active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO tours(code, title, short_desc, full_desc, adult_price, child_price, duration_days, 
+            category_id, policy, image_url, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
@@ -45,15 +51,16 @@ class TourModel
             $data["title"],
             $data["short_desc"],
             $data["full_desc"],
-            $data["base_price"],
+            $data["adult_price"],   // thêm
+            $data["child_price"],   // thêm
             $data["duration_days"],
             $data["category_id"],
             $data["policy"],
-            $data["supplier"],
             $data["image_url"],
             $data["is_active"]
         ]);
     }
+
 
     public function find($id)
     {
@@ -65,9 +72,9 @@ class TourModel
     public function update($data)
     {
         $sql = "UPDATE tours SET 
-                code=?, title=?, short_desc=?, full_desc=?, base_price=?, duration_days=?, 
-                category_id=?, policy=?, supplier=?, image_url=?, is_active=? 
-                WHERE id=?";
+            code=?, title=?, short_desc=?, full_desc=?, adult_price=?, child_price=?, duration_days=?, 
+            category_id=?, policy=?, image_url=?, is_active=? 
+            WHERE id=?";
 
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
@@ -75,16 +82,42 @@ class TourModel
             $data["title"],
             $data["short_desc"],
             $data["full_desc"],
-            $data["base_price"],
+            $data["adult_price"],
+            $data["child_price"],
             $data["duration_days"],
             $data["category_id"],
             $data["policy"],
-            $data["supplier"],
             $data["image_url"],
             $data["is_active"],
             $data["id"]
         ]);
     }
+
+    // lấy tất cả tour kèm tên danh mục
+    public function getAllWithCategory()
+    {
+        $sql = "SELECT t.*, c.name AS category_name
+            FROM tours t
+            LEFT JOIN tour_category c ON t.category_id = c.id
+            ORDER BY t.code ASC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // tìm tour theo id kèm tên danh mục
+    public function findWithCategory($id)
+    {
+        $sql = "SELECT t.*, c.name AS category_name
+            FROM tours t
+            LEFT JOIN tour_category c ON t.category_id = c.id
+            WHERE t.id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+
 
     public function delete($id)
     {
