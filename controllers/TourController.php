@@ -2,36 +2,28 @@
 class TourController
 {
     private $model;
+    private $pdo;
 
     public function __construct()
     {
         require_once "./commons/env.php";
         require_once "./commons/function.php";
 
-        global $pdo;
-        if (function_exists("connectDB")) {
-            $pdo = connectDB();
-        }
+        $this->pdo = connectDB();
 
         require_once "./models/TourModel.php";
         $this->model = new TourModel();
     }
 
-
     public function index($act)
     {
         $pageTitle = "Quản lý Tour";
-        $tours = $this->model->getAll();   // tránh lỗi null
         $currentAct = $act;
 
         $keyword = trim($_GET['keyword'] ?? '');
-
-        if ($keyword !== '') {
-            $tours = $this->model->searchByKeyword($keyword);
-        } else {
-            $tours = $this->model->getAll();
-        }
-
+        $tours = $keyword !== ''
+            ? $this->model->searchByKeyword($keyword)
+            : $this->model->getAllWithCategory(); // join category để hiển thị tên danh mục
 
         $view = "./views/admin/Tours/index.php";
         include "./views/layout/adminLayout.php";
@@ -39,9 +31,7 @@ class TourController
 
     public function create($act)
     {
-        global $pdo;
-        // Lấy danh mục Tour
-        $categories = $pdo->query("SELECT id, name FROM tour_category")->fetchAll();
+        $categories = $this->pdo->query("SELECT id, name FROM tour_category")->fetchAll();
         $pageTitle = "Thêm Tour";
         $currentAct = $act;
 
@@ -51,37 +41,30 @@ class TourController
 
     public function store()
     {
-        global $pdo;
-
         $imageName = null;
 
-        // --- Xử lý upload ảnh ---
         if (!empty($_FILES["image_file"]["name"])) {
-
             $uploadDir = "assets/images/";
             $imageName = time() . "_" . basename($_FILES["image_file"]["name"]);
-            $targetPath = $uploadDir . $imageName;
-
-            move_uploaded_file($_FILES["image_file"]["tmp_name"], $targetPath);
+            move_uploaded_file($_FILES["image_file"]["tmp_name"], $uploadDir . $imageName);
         }
 
-        // Lưu CSDL
-        $sql = "INSERT INTO tours (code, title, short_desc, full_desc, base_price, duration_days,
-                category_id, policy, supplier, image_url, is_active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        $stmt = $pdo->prepare($sql);
+        $sql = "INSERT INTO tours 
+            (code, title, short_desc, full_desc, adult_price, child_price, duration_days, 
+             category_id, policy, image_url, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $_POST["code"],
             $_POST["title"],
             $_POST["short_desc"],
             $_POST["full_desc"],
-            $_POST["base_price"],
+            $_POST["adult_price"],
+            $_POST["child_price"],
             $_POST["duration_days"],
             $_POST["category_id"],
             $_POST["policy"],
-            $_POST["supplier"],
-            $imageName,           // ← Lưu tên file vào database
+            $imageName,
             $_POST["is_active"]
         ]);
 
@@ -89,29 +72,24 @@ class TourController
         exit;
     }
 
-
     public function edit($act)
     {
-        global $pdo;
-        $cats = $pdo->query("SELECT id, name FROM tour_category")->fetchAll();
-
+        $categories = $this->pdo->query("SELECT id, name FROM tour_category")->fetchAll();
         $id = $_GET["id"];
-        $tour = $this->model->find($id);
-        $currentAct = $act;
+        $tour = $this->model->findWithCategory($id);  
 
         $pageTitle = "Sửa Tour";
+        $currentAct = $act;
+
         $view = "./views/admin/Tours/edit.php";
         include "./views/layout/adminLayout.php";
     }
 
     public function update()
     {
-        global $pdo;
-
         $id = $_POST["id"];
-        $imageName = $_POST["old_image"]; // giữ ảnh cũ nếu không upload
+        $imageName = $_POST["old_image"];
 
-        // Nếu chọn ảnh mới → upload
         if (!empty($_FILES["image_file"]["name"])) {
             $uploadDir = "assets/images/";
             $imageName = time() . "_" . basename($_FILES["image_file"]["name"]);
@@ -119,23 +97,22 @@ class TourController
         }
 
         $sql = "UPDATE tours SET 
-                    code=?, title=?, short_desc=?, full_desc=?, 
-                    base_price=?, duration_days=?, category_id=?, 
-                    policy=?, supplier=?, image_url=?, is_active=?
-                WHERE id=?";
-
-        $stmt = $pdo->prepare($sql);
+            code=?, title=?, short_desc=?, full_desc=?, 
+            adult_price=?, child_price=?, duration_days=?, 
+            category_id=?, policy=?, image_url=?, is_active=?
+            WHERE id=?";
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $_POST["code"],
             $_POST["title"],
             $_POST["short_desc"],
             $_POST["full_desc"],
-            $_POST["base_price"],
+            $_POST["adult_price"],
+            $_POST["child_price"],
             $_POST["duration_days"],
             $_POST["category_id"],
             $_POST["policy"],
-            $_POST["supplier"],
-            $imageName,  // <- LƯU TÊN ẢNH MỚI HOẶC ẢNH CŨ
+            $imageName,
             $_POST["is_active"],
             $id
         ]);
@@ -143,7 +120,6 @@ class TourController
         header("Location: index.php?act=admin-tour");
         exit;
     }
-
 
     public function delete()
     {
