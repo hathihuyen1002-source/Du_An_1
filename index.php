@@ -22,6 +22,7 @@ require_once './controllers/ScheduleController.php';
 require_once './controllers/StaffController.php';
 require_once './controllers/UserController.php';
 require_once './controllers/PaymentController.php';
+require_once './controllers/ReportController.php';
 
 
 // Auth
@@ -92,6 +93,8 @@ match ($act) {
     'admin-payment-cancel'       => (new PaymentController())->cancel(),
 
 
+  // ================= DASHBOARD ===================
+    'admin-report'                 => (new ReportController())->index($currentAct),
 
 
 

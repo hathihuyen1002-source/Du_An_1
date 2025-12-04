@@ -52,8 +52,8 @@ $currentAct = $currentAct ?? '';
         <span>Quản lý thanh toán</span>
     </a>
 
-    <a href="?act=admin-reports" 
-       class="menu-item <?= ($currentAct == 'admin-reports' ? 'active' : '') ?>">
+    <a href="?act=admin-report" 
+       class="menu-item <?= ($currentAct == 'admin-report' ? 'active' : '') ?>">
         <i class="fas fa-chart-pie menu-icon"></i>
         <span>Báo cáo</span>
     </a>
