@@ -85,12 +85,51 @@ class BookingController
     /** ------------------------
      *  Xử lý tạo booking
      */
+    /** ------------------------
+     *  Xử lý tạo booking
+     */
     public function store(): void
     {
         // ✅ Lấy author_id từ session
         $author_id = $_SESSION['user_id'] ?? null;
 
         $data = $_POST;
+
+        // ✅ THÊM: Kiểm tra chỗ trống TRƯỚC KHI TẠO
+        // (Chỉ check với tour thường, tour custom thì bỏ qua)
+        if (!empty($data['tour_id'])) {
+            // Lấy schedule_id từ tour
+            $tour_id = (int) $data['tour_id'];
+            $adults = (int) ($data['adults'] ?? 0);
+            $children = (int) ($data['children'] ?? 0);
+
+            // Tìm schedule gần nhất của tour này
+            $stmt = $this->bookingModel->getConnection()->prepare("
+            SELECT id FROM tour_schedule 
+            WHERE tour_id = ? 
+              AND depart_date >= CURDATE() 
+              AND status = 'OPEN'
+              AND is_custom_request = 0
+            ORDER BY depart_date ASC 
+            LIMIT 1
+        ");
+            $stmt->execute([$tour_id]);
+            $schedule = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($schedule) {
+                $schedule_id = $schedule['id'];
+
+                // Check capacity
+                if (!$this->bookingModel->checkCapacity($schedule_id, $adults, $children)) {
+                    $_SESSION['error'] = "❌ Không đủ chỗ! Tour này đã hết chỗ. Vui lòng chọn tour khác.";
+                    $_SESSION['old_data'] = $data;
+                    header("Location: index.php?act=admin-booking-create");
+                    exit;
+                }
+            }
+        }
+
+        // ✅ Tiếp tục tạo booking
         $res = $this->bookingModel->create($data, $author_id);
 
         if ($res['ok'] ?? false) {
@@ -325,11 +364,11 @@ class BookingController
             return 'Có lỗi xảy ra!';
         }
 
-        return '<ul class="mb-0">' . 
-               implode('', array_map(function($err) {
-                   return '<li>' . htmlspecialchars($err) . '</li>';
-               }, $errors)) . 
-               '</ul>';
+        return '<ul class="mb-0">' .
+            implode('', array_map(function ($err) {
+                return '<li>' . htmlspecialchars($err) . '</li>';
+            }, $errors)) .
+            '</ul>';
     }
 
     /** ------------------------
