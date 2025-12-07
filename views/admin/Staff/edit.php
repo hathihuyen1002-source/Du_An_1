@@ -1,3 +1,14 @@
+<?php
+// ✅ Lấy dữ liệu cũ nếu có lỗi
+$oldData = $_SESSION['old_data'] ?? [];
+unset($_SESSION['old_data']);
+
+// ✅ Merge với dữ liệu hiện tại
+if (!empty($oldData)) {
+    $staff = array_merge($staff, $oldData);
+}
+?>
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="page-title">✏️ Sửa Nhân viên</h2>
@@ -6,8 +17,18 @@
         </a>
     </div>
 
-    <form action="index.php?act=admin-staff-update" method="POST" enctype="multipart/form-data" class="card p-4 shadow-sm">
+    <form action="index.php?act=admin-staff-update" method="POST" enctype="multipart/form-data"
+        class="card p-4 shadow-sm">
         <input type="hidden" name="id" value="<?= $staff['id'] ?>">
+
+        <!-- ✅ THÊM THÔNG BÁO LỖI -->
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <?= $_SESSION['error'] ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
 
         <!-- ============ THÔNG TIN CƠ BẢN ============ -->
         <h5 class="border-bottom pb-2 mb-3">📋 Thông tin cơ bản</h5>
@@ -27,22 +48,22 @@
 
             <div class="col-md-6 form-group">
                 <label>Ngày sinh</label>
-                <input type="date" name="date_of_birth" class="form-control" 
-                       value="<?= htmlspecialchars($staff['date_of_birth'] ?? '') ?>">
+                <input type="date" name="date_of_birth" class="form-control"
+                    value="<?= htmlspecialchars($staff['date_of_birth'] ?? '') ?>">
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-6 form-group">
                 <label>SĐT <span class="text-danger">*</span></label>
-                <input type="text" name="phone" class="form-control" 
-                       value="<?= htmlspecialchars($staff['phone']) ?>" required>
+                <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($staff['phone']) ?>"
+                    required>
             </div>
 
             <div class="col-md-6 form-group">
                 <label>CMND/CCCD</label>
-                <input type="text" name="id_number" class="form-control" 
-                       value="<?= htmlspecialchars($staff['id_number'] ?? '') ?>">
+                <input type="text" name="id_number" class="form-control"
+                    value="<?= htmlspecialchars($staff['id_number'] ?? '') ?>">
             </div>
         </div>
 
@@ -52,8 +73,8 @@
         <div class="form-group">
             <label>Ảnh hiện tại</label><br>
             <?php if (!empty($staff['profile_image'])): ?>
-                <img src="<?= htmlspecialchars($staff['profile_image']) ?>" 
-                     alt="Avatar" class="rounded mb-2" style="width: 120px; height: 120px; object-fit: cover;">
+                <img src="<?= htmlspecialchars($staff['profile_image']) ?>" alt="Avatar" class="rounded mb-2"
+                    style="width: 120px; height: 120px; object-fit: cover;">
             <?php else: ?>
                 <p class="text-muted">Chưa có ảnh</p>
             <?php endif; ?>
@@ -90,25 +111,23 @@
 
             <div class="col-md-6 form-group">
                 <label>Trình độ/Bằng cấp</label>
-                <input type="text" name="qualification" class="form-control" 
-                       value="<?= htmlspecialchars($staff['qualification'] ?? '') ?>"
-                       placeholder="VD: Cử nhân Du lịch">
+                <input type="text" name="qualification" class="form-control"
+                    value="<?= htmlspecialchars($staff['qualification'] ?? '') ?>" placeholder="VD: Cử nhân Du lịch">
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-6 form-group">
                 <label>Số năm kinh nghiệm</label>
-                <input type="number" name="experience_years" class="form-control" 
-                       value="<?= htmlspecialchars($staff['experience_years'] ?? 0) ?>" 
-                       min="0" placeholder="VD: 5">
+                <input type="number" name="experience_years" class="form-control"
+                    value="<?= htmlspecialchars($staff['experience_years'] ?? 0) ?>" min="0" placeholder="VD: 5">
             </div>
 
             <div class="col-md-6 form-group">
                 <label>Đánh giá năng lực (0-5)</label>
-                <input type="number" name="rating" class="form-control" 
-                       value="<?= htmlspecialchars($staff['rating'] ?? '') ?>" 
-                       min="0" max="5" step="0.1" placeholder="VD: 4.5">
+                <input type="number" name="rating" class="form-control"
+                    value="<?= htmlspecialchars($staff['rating'] ?? '') ?>" min="0" max="5" step="0.1"
+                    placeholder="VD: 4.5">
             </div>
         </div>
 
@@ -118,14 +137,14 @@
         <div class="form-group">
             <label>Chứng chỉ chuyên môn</label>
             <textarea name="certifications" class="form-control" rows="3"
-                      placeholder="VD: Hướng dẫn viên du lịch quốc gia số 12345, Chứng chỉ IELTS 7.5"><?= htmlspecialchars($staff['certifications'] ?? '') ?></textarea>
+                placeholder="VD: Hướng dẫn viên du lịch quốc gia số 12345, Chứng chỉ IELTS 7.5"><?= htmlspecialchars($staff['certifications'] ?? '') ?></textarea>
         </div>
 
         <div class="form-group">
             <label>Ngôn ngữ sử dụng</label>
-            <input type="text" name="languages" class="form-control" 
-                   value="<?= htmlspecialchars($staff['languages'] ?? '') ?>"
-                   placeholder="VD: Tiếng Anh, Tiếng Pháp, Tiếng Trung">
+            <input type="text" name="languages" class="form-control"
+                value="<?= htmlspecialchars($staff['languages'] ?? '') ?>"
+                placeholder="VD: Tiếng Anh, Tiếng Pháp, Tiếng Trung">
             <small class="text-muted">Cách nhau bởi dấu phẩy</small>
         </div>
 
@@ -167,14 +186,14 @@
         <div class="form-group">
             <label>Lịch sử dẫn tour nổi bật</label>
             <textarea name="tour_history" class="form-control" rows="3"
-                      placeholder="VD: Dẫn tour Hạ Long 50+ lần, Tour Sapa 30+ lần"><?= htmlspecialchars($staff['tour_history'] ?? '') ?></textarea>
+                placeholder="VD: Dẫn tour Hạ Long 50+ lần, Tour Sapa 30+ lần"><?= htmlspecialchars($staff['tour_history'] ?? '') ?></textarea>
             <small class="text-muted">Các tour đã dẫn, số lần, khách đặc biệt...</small>
         </div>
 
         <div class="form-group">
             <label>Ghi chú khác</label>
             <textarea name="notes" class="form-control" rows="3"
-                      placeholder="VD: Có xe máy cá nhân, sẵn sàng tăng ca..."><?= htmlspecialchars($staff['notes'] ?? '') ?></textarea>
+                placeholder="VD: Có xe máy cá nhân, sẵn sàng tăng ca..."><?= htmlspecialchars($staff['notes'] ?? '') ?></textarea>
         </div>
 
         <!-- ============ BUTTONS ============ -->

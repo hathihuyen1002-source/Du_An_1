@@ -2,6 +2,7 @@
 class StaffModel
 {
     private $pdo;
+    private $lastError = null;
 
     public function __construct()
     {
@@ -66,6 +67,9 @@ class StaffModel
     // ============ Thêm mới staff ============
     public function store($data)
     {
+        error_log("=== StaffModel::store() START ===");
+        error_log("Received data: " . print_r($data, true));
+
         $sql = "INSERT INTO staffs(
             user_id, phone, id_number, qualification, status,
             date_of_birth, profile_image, staff_type, certifications,
@@ -74,27 +78,49 @@ class StaffModel
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->pdo->prepare($sql);
-        
+
+        $params = [
+            $data["user_id"],
+            $data["phone"],
+            $data["id_number"] ?? null,
+            $data["qualification"] ?? null,
+            $data["status"] ?? 'ACTIVE',
+            $data["date_of_birth"] ?? null,
+            $data["profile_image"] ?? null,
+            $data["staff_type"] ?? 'DOMESTIC',
+            $data["certifications"] ?? null,
+            $data["languages"] ?? null,
+            $data["experience_years"] ?? 0,
+            $data["rating"] ?? null,
+            $data["health_status"] ?? 'good',
+            $data["tour_history"] ?? null,
+            $data["notes"] ?? null
+        ];
+
+        error_log("Params: " . print_r($params, true));
+
         try {
-            return $stmt->execute([
-                $data["user_id"],
-                $data["phone"],
-                $data["id_number"] ?? null,
-                $data["qualification"] ?? null,
-                $data["status"] ?? 'ACTIVE',
-                $data["date_of_birth"] ?? null,
-                $data["profile_image"] ?? null,
-                $data["staff_type"] ?? 'DOMESTIC',
-                $data["certifications"] ?? null,
-                $data["languages"] ?? null,
-                $data["experience_years"] ?? 0,
-                $data["rating"] ?? null,
-                $data["health_status"] ?? 'good',
-                $data["tour_history"] ?? null,
-                $data["notes"] ?? null
-            ]);
+            $result = $stmt->execute($params);
+            $lastId = $this->pdo->lastInsertId();
+            
+            error_log("Execute result: " . ($result ? 'TRUE' : 'FALSE'));
+            error_log("Last insert ID: " . $lastId);
+            
+            if ($result && $lastId > 0) {
+                error_log("✅ Insert success!");
+                return true;
+            }
+            
+            error_log("❌ Insert failed - no ID returned");
+            return false;
+            
         } catch (PDOException $e) {
-            error_log("StaffModel::store() Error: " . $e->getMessage());
+            error_log("❌ StaffModel::store() PDOException:");
+            error_log("Message: " . $e->getMessage());
+            error_log("Code: " . $e->getCode());
+            error_log("SQL State: " . ($e->errorInfo[0] ?? 'N/A'));
+            
+            $this->lastError = $e->errorInfo;
             return false;
         }
     }
@@ -106,7 +132,7 @@ class StaffModel
                 FROM staffs s
                 LEFT JOIN users u ON u.id = s.user_id
                 WHERE s.id = ?";
-        
+
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -115,36 +141,65 @@ class StaffModel
     // ============ Cập nhật staff ============
     public function update($data)
     {
+        error_log("=== StaffModel::update() START ===");
+        error_log("Received data: " . print_r($data, true));
+
         $sql = "UPDATE staffs SET 
-                user_id=?, phone=?, id_number=?, qualification=?, status=?,
-                date_of_birth=?, profile_image=?, staff_type=?, certifications=?,
-                languages=?, experience_years=?, rating=?, health_status=?,
-                tour_history=?, notes=?
-                WHERE id=?";
+            user_id=?, phone=?, id_number=?, qualification=?, status=?,
+            date_of_birth=?, profile_image=?, staff_type=?, certifications=?,
+            languages=?, experience_years=?, rating=?, health_status=?,
+            tour_history=?, notes=?
+            WHERE id=?";
 
         $stmt = $this->pdo->prepare($sql);
-        
+
+        $params = [
+            $data["user_id"],
+            $data["phone"],
+            $data["id_number"] ?? null,
+            $data["qualification"] ?? null,
+            $data["status"] ?? 'ACTIVE',
+            $data["date_of_birth"] ?? null,
+            $data["profile_image"] ?? null,
+            $data["staff_type"] ?? 'DOMESTIC',
+            $data["certifications"] ?? null,
+            $data["languages"] ?? null,
+            $data["experience_years"] ?? 0,
+            $data["rating"] ?? null,
+            $data["health_status"] ?? 'good',
+            $data["tour_history"] ?? null,
+            $data["notes"] ?? null,
+            $data["id"]
+        ];
+
+        error_log("Params: " . print_r($params, true));
+
         try {
-            return $stmt->execute([
-                $data["user_id"],
-                $data["phone"],
-                $data["id_number"] ?? null,
-                $data["qualification"] ?? null,
-                $data["status"] ?? 'ACTIVE',
-                $data["date_of_birth"] ?? null,
-                $data["profile_image"] ?? null,
-                $data["staff_type"] ?? 'DOMESTIC',
-                $data["certifications"] ?? null,
-                $data["languages"] ?? null,
-                $data["experience_years"] ?? 0,
-                $data["rating"] ?? null,
-                $data["health_status"] ?? 'good',
-                $data["tour_history"] ?? null,
-                $data["notes"] ?? null,
-                $data["id"]
-            ]);
+            $result = $stmt->execute($params);
+            $rowCount = $stmt->rowCount();
+            
+            error_log("Execute result: " . ($result ? 'TRUE' : 'FALSE'));
+            error_log("Rows affected: " . $rowCount);
+
+            // Return true ngay cả khi không có thay đổi (dữ liệu giống cũ)
+            if ($result) {
+                if ($rowCount === 0) {
+                    error_log("⚠️ No rows updated - data might be identical");
+                } else {
+                    error_log("✅ Update success!");
+                }
+                return true;
+            }
+            
+            return false;
+
         } catch (PDOException $e) {
-            error_log("StaffModel::update() Error: " . $e->getMessage());
+            error_log("❌ StaffModel::update() PDOException:");
+            error_log("Message: " . $e->getMessage());
+            error_log("Code: " . $e->getCode());
+            error_log("SQL State: " . ($e->errorInfo[0] ?? 'N/A'));
+
+            $this->lastError = $e->errorInfo;
             return false;
         }
     }
@@ -153,29 +208,33 @@ class StaffModel
     public function delete($id)
     {
         try {
-            // ✅ Kiểm tra xem staff có đang dẫn tour nào không
-            $checkStmt = $this->pdo->prepare("
-                SELECT COUNT(*) as count 
-                FROM tour_schedule 
-                WHERE guide_id = ?
-            ");
+            // ✅ Bảng tour_schedule không có cột guide/staff
+            // → Bỏ qua kiểm tra, hoặc thêm sau khi bảng được cập nhật
+            
+            // TODO: Nếu sau này thêm cột guide_id vào tour_schedule, uncomment đoạn này:
+            /*
+            $checkStmt = $this->pdo->prepare("SELECT COUNT(*) as count FROM tour_schedule WHERE guide_id = ?");
             $checkStmt->execute([$id]);
             $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
-
+            
             if ($result['count'] > 0) {
-                // Không thể xóa vì còn tour
+                error_log("Cannot delete - staff has tours");
                 return false;
             }
+            */
 
-            // ✅ Lấy thông tin ảnh để xóa file
+            // Lấy thông tin ảnh để xóa file
             $staff = $this->find($id);
             if ($staff && !empty($staff['profile_image'])) {
                 deleteFile($staff['profile_image']);
             }
 
-            // ✅ Xóa staff
+            // Xóa staff
             $stmt = $this->pdo->prepare("DELETE FROM staffs WHERE id=?");
-            return $stmt->execute([$id]);
+            $result = $stmt->execute([$id]);
+            
+            error_log("Delete result: " . ($result ? 'TRUE' : 'FALSE'));
+            return $result;
 
         } catch (PDOException $e) {
             error_log("StaffModel::delete() Error: " . $e->getMessage());
@@ -225,4 +284,27 @@ class StaffModel
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['count'] > 0;
     }
+
+    // ============ Kiểm tra trùng số điện thoại ============
+    public function findByPhone($phone, $excludeId = null)
+    {
+        $sql = "SELECT id FROM staffs WHERE phone = ?";
+        $params = [$phone];
+
+        if ($excludeId) {
+            $sql .= " AND id != ?";
+            $params[] = $excludeId;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // ============ Lấy lỗi cuối cùng ============
+    public function getLastError()
+    {
+        return $this->lastError;
+    }
 }
+?>

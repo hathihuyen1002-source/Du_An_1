@@ -44,7 +44,7 @@
 </style>
 
 <div class="container-fluid px-4 mt-4">
-    
+
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
@@ -63,16 +63,16 @@
         <div class="card-body">
             <form class="row g-2" method="get" action="index.php">
                 <input type="hidden" name="act" value="admin-staff">
-                
+
                 <!-- Tìm kiếm -->
                 <div class="col-md-4">
                     <div class="input-group">
                         <span class="input-group-text bg-white">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text" name="keyword" class="form-control border-start-0" 
-                               placeholder="Tìm theo tên, email, SĐT, CMND..."
-                               value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>">
+                        <input type="text" name="keyword" class="form-control border-start-0"
+                            placeholder="Tìm theo tên, email, SĐT, CMND..."
+                            value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>">
                     </div>
                 </div>
 
@@ -114,13 +114,13 @@
                         <i class="bi bi-funnel"></i> Tìm kiếm
                     </button>
                 </div>
-                
+
                 <?php if (!empty($_GET['keyword']) || !empty($_GET['staff_type']) || !empty($_GET['status'])): ?>
-                <div class="col-md-2">
-                    <a href="index.php?act=admin-staff" class="btn btn-secondary w-100">
-                        <i class="bi bi-x-circle"></i> Xóa bộ lọc
-                    </a>
-                </div>
+                    <div class="col-md-2">
+                        <a href="index.php?act=admin-staff" class="btn btn-secondary w-100">
+                            <i class="bi bi-x-circle"></i> Xóa bộ lọc
+                        </a>
+                    </div>
                 <?php endif; ?>
             </form>
         </div>
@@ -184,9 +184,27 @@
                                 <!-- Ảnh -->
                                 <td>
                                     <?php if (!empty($s['profile_image'])): ?>
-                                        <img src="<?= htmlspecialchars($s['profile_image']) ?>" 
-                                             alt="<?= htmlspecialchars($s['full_name']) ?>" 
-                                             class="staff-avatar">
+                                        <?php
+                                        $image = trim($s['profile_image']);
+
+                                        // Xử lý đường dẫn ảnh
+                                        if (preg_match('#^(https?:)?//#i', $image) || str_starts_with($image, '/')) {
+                                            // URL đầy đủ hoặc absolute path
+                                            $imageSrc = $image;
+                                        } elseif (str_contains($image, 'assets/')) {
+                                            // Đã có assets/ trong path
+                                            $imageSrc = $image;
+                                        } else {
+                                            // Chỉ là tên file → thêm prefix
+                                            $imageSrc = 'assets/images/staff/' . $image;
+                                        }
+                                        ?>
+                                        <img src="<?= htmlspecialchars($imageSrc) ?>" alt="<?= htmlspecialchars($s['full_name']) ?>"
+                                            class="staff-avatar"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="empty-avatar" style="display: none;">
+                                            <?= strtoupper(substr($s['full_name'], 0, 1)) ?>
+                                        </div>
                                     <?php else: ?>
                                         <div class="empty-avatar">
                                             <?= strtoupper(substr($s['full_name'], 0, 1)) ?>
@@ -232,7 +250,7 @@
                                 <!-- Kinh nghiệm -->
                                 <td class="text-center">
                                     <span class="badge bg-info">
-                                        <?= (int)($s['experience_years'] ?? 0) ?> năm
+                                        <?= (int) ($s['experience_years'] ?? 0) ?> năm
                                     </span>
                                 </td>
 
@@ -255,8 +273,8 @@
                                         'fair' => '💛',
                                         'poor' => '❤️'
                                     ];
-                                    echo '<span class="health-icon" title="' . ($s['health_status'] ?? 'good') . '">' . 
-                                         ($healthIcons[$s['health_status'] ?? 'good'] ?? '💚') . '</span>';
+                                    echo '<span class="health-icon" title="' . ($s['health_status'] ?? 'good') . '">' .
+                                        ($healthIcons[$s['health_status'] ?? 'good'] ?? '💚') . '</span>';
                                     ?>
                                 </td>
 
@@ -285,17 +303,17 @@
                                 <!-- Thao tác -->
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="index.php?act=admin-staff-detail&id=<?= $s['id'] ?>" 
-                                           class="btn btn-info" title="Xem chi tiết">
+                                        <a href="index.php?act=admin-staff-detail&id=<?= $s['id'] ?>" class="btn btn-info"
+                                            title="Xem chi tiết">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="index.php?act=admin-staff-edit&id=<?= $s['id'] ?>" 
-                                           class="btn btn-warning" title="Sửa">
+                                        <a href="index.php?act=admin-staff-edit&id=<?= $s['id'] ?>" class="btn btn-warning"
+                                            title="Sửa">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a href="index.php?act=admin-staff-delete&id=<?= $s['id'] ?>" 
-                                           class="btn btn-danger" title="Xóa"
-                                           onclick="return confirm('⚠️ Bạn có chắc muốn xóa HDV này?\n\nLưu ý: Hành động này KHÔNG THỂ hoàn tác!')">
+                                        <a href="index.php?act=admin-staff-delete&id=<?= $s['id'] ?>" class="btn btn-danger"
+                                            title="Xóa"
+                                            onclick="return confirm('⚠️ Bạn có chắc muốn xóa HDV này?\n\nLưu ý: Hành động này KHÔNG THỂ hoàn tác!')">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>

@@ -6,7 +6,7 @@
         </a>
     </div>
 
-    <form action="index.php?act=admin-staff-store" method="POST" class="card p-4 shadow-sm">
+    <form action="index.php?act=admin-staff-store" method="POST" enctype="multipart/form-data" class="card p-4 shadow-sm">
 
         <div class="form-group">
             <label>Tài khoản (User)</label>
